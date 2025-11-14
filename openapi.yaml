@@ -1,0 +1,123 @@
+openapi: 3.0.3
+info:
+  title: School Scheduler API
+  version: 1.0.0
+servers:
+  - url: https://your-backend.example.com
+paths:
+  /api/v1/schedule/generate:
+    post:
+      summary: Generate a study schedule using ChatGPT (or other LLM)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - exams
+              properties:
+                exams:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/Exam"
+                options:
+                  type: object
+                  properties:
+                    dailyMinutes:
+                      type: integer
+                      description: Approx target study minutes per day
+                    timezone:
+                      type: string
+                      description: IANA timezone for date calculations (optional)
+      responses:
+        "200":
+          description: Generated schedule
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GeneratedSchedule"
+        "400":
+          description: Bad request
+        "500":
+          description: Server error
+components:
+  schemas:
+    StudyItem:
+      type: object
+      required:
+        - id
+        - title
+      properties:
+        id:
+          type: string
+          description: client-generated UUID
+        title:
+          type: string
+        effortMinutes:
+          type: integer
+          description: estimated minutes to study this item (optional)
+    Exam:
+      type: object
+      required:
+        - id
+        - title
+        - date
+        - studyItems
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        date:
+          type: string
+          description: ISO date (YYYY-MM-DD) of the exam
+        studyItems:
+          type: array
+          items:
+            $ref: "#/components/schemas/StudyItem"
+    ScheduleTask:
+      type: object
+      required:
+        - examId
+        - studyItemId
+        - title
+        - minutes
+      properties:
+        examId:
+          type: string
+        studyItemId:
+          type: string
+        title:
+          type: string
+        minutes:
+          type: integer
+    ScheduleDay:
+      type: object
+      required:
+        - date
+        - tasks
+      properties:
+        date:
+          type: string
+          description: ISO date (YYYY-MM-DD)
+        tasks:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScheduleTask"
+    GeneratedSchedule:
+      type: object
+      properties:
+        days:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScheduleDay"
+        meta:
+          type: object
+          properties:
+            generatedAt:
+              type: string
+            source:
+              type: string
+              description: "chatgpt | local-mock"
+security: []
